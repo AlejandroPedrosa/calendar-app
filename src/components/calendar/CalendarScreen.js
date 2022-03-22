@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 
@@ -11,26 +11,17 @@ import { messages } from "../../helpers/calendar-messages-es";
 import { CalendarEvent } from "./CalendarEvent";
 import { CalendarModal } from "./CalendarModal";
 import { uiOpenModal } from "../../actions/ui";
+import { eventClearActiveEvent, eventSetActive } from "../../actions/events";
+import { AddNewFab } from "../ui/AddNewFab";
+import { DeleteEventFab } from "../ui/DeleteEventFab";
 
 moment.locale("es");
 
 const localizer = momentLocalizer(moment);
-const events = [
-  {
-    title: "Cumpleaños del jefe",
-    start: moment().toDate(),
-    end: moment().add(2, "hours").toDate(),
-    bgcolor: "#fafafa",
-    notes: "comprar la torta",
-    user: {
-      _id: "123",
-      name: "Alejandro",
-    },
-  },
-];
 
 export const CalendarScreen = () => {
   const dispatch = useDispatch();
+  const { events, activeEvent } = useSelector((state) => state.calendar);
 
   const [lastView, setlastView] = useState(
     localStorage.getItem("lastView") || "month"
@@ -41,12 +32,16 @@ export const CalendarScreen = () => {
   };
 
   const onSelectEvent = (e) => {
-    console.log(e);
+    dispatch(eventSetActive(e));
   };
 
   const onViewChange = (e) => {
     setlastView(e);
     localStorage.setItem("lastView", e);
+  };
+
+  const onSelectSlot = (e) => {
+    dispatch(eventClearActiveEvent());
   };
 
   const eventStyleGetter = (event, start, end, isSelected) => {
@@ -76,11 +71,16 @@ export const CalendarScreen = () => {
           onView={onViewChange}
           onSelectEvent={onSelectEvent}
           onDoubleClickEvent={onDobleClick}
+          onSelectSlot={onSelectSlot}
+          selectable={true}
           eventPropGetter={eventStyleGetter}
           view={lastView}
           components={{ event: CalendarEvent }}
         />
       </div>
+
+      <AddNewFab />
+      {activeEvent && <DeleteEventFab />}
       <CalendarModal />
     </div>
   );
